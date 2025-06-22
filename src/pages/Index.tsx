@@ -1,24 +1,38 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Star, Users, Package, TrendingUp, Sparkles, Zap, Shield, CheckCircle, Globe, Headphones, Award, ArrowRight, Quote } from 'lucide-react';
-import AuthModal from '@/components/AuthModal';
-import AdminPanel from '@/components/AdminPanel';
-import Cart from '@/components/Cart';
-import CheckoutForm from '@/components/CheckoutForm';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { useToast } from '@/hooks/use-toast';
-
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  createdAt: string;
-}
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { 
+  ShoppingCart, 
+  Plus, 
+  Eye, 
+  Star, 
+  Truck, 
+  Shield, 
+  Award, 
+  Users, 
+  Zap,
+  Menu,
+  X,
+  Sun,
+  Moon,
+  ArrowRight,
+  CheckCircle,
+  Globe,
+  Heart,
+  MessageCircle
+} from 'lucide-react';
+import Cart from '../components/Cart';
+import CheckoutForm from '../components/CheckoutForm';
+import AdminPanel from '../components/AdminPanel';
+import AuthModal from '../components/AuthModal';
+import ProductDetail from '../components/ProductDetail';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 interface Product {
   id: string;
@@ -34,641 +48,642 @@ interface CartItem {
   quantity: number;
 }
 
-interface Order {
-  id: string;
-  userId: string;
-  items: CartItem[];
-  total: number;
-  createdAt: string;
-  status: string;
-  customerInfo?: {
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    zipCode: string;
-  };
-  products?: any[];
-}
-
 const Index = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'login'>('signin');
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const navigate = useNavigate();
+  const { id: productId } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const { toast } = useToast();
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authType, setAuthType] = useState<'login' | 'register'>('login');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [newProduct, setNewProduct] = useState<Omit<Product, 'id' | 'createdAt'>>({
+    name: '',
+    price: 0,
+    description: '',
+    image: '',
+  });
 
   useEffect(() => {
-    // Load data from localStorage on component mount
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-
-    const savedProducts = localStorage.getItem('products');
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
+    // Load products from local storage or fetch from API
+    const storedProducts = localStorage.getItem('products');
+    if (storedProducts) {
+      setProducts(JSON.parse(storedProducts));
     } else {
-      // Initialize with some sample products
-      const initialProducts: Product[] = [
+      // Mock products for demonstration
+      const mockProducts: Product[] = [
         {
           id: '1',
-          name: 'Premium Laptop',
-          price: 1299,
-          description: 'High-performance laptop for professionals',
-          image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400',
-          createdAt: new Date().toISOString()
+          name: 'Premium Smartwatch',
+          price: 299,
+          description: 'The ultimate smartwatch for fitness tracking and smart notifications.',
+          image: 'photo-1523275335684-37898b6baf0c',
+          createdAt: new Date().toISOString(),
         },
         {
           id: '2',
-          name: 'Wireless Headphones',
+          name: 'Wireless Noise Cancelling Headphones',
           price: 199,
-          description: 'Noise-cancelling bluetooth headphones',
-          image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
-          createdAt: new Date().toISOString()
+          description: 'Immerse yourself in sound with these high-quality noise cancelling headphones.',
+          image: 'photo-1505740420928-5e560ba3e51d',
+          createdAt: new Date().toISOString(),
         },
         {
           id: '3',
-          name: 'Smart Watch',
-          price: 299,
-          description: 'Advanced fitness and health tracking',
-          image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
-          createdAt: new Date().toISOString()
-        }
+          name: 'Ergonomic Office Chair',
+          price: 349,
+          description: 'Stay comfortable and productive with this ergonomic office chair.',
+          image: 'photo-1560343090-f04029528ccb',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '4',
+          name: 'Mechanical Gaming Keyboard',
+          price: 129,
+          description: 'Dominate your games with this responsive mechanical gaming keyboard.',
+          image: 'photo-1567016544370-463ce781b815',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '5',
+          name: '4K Ultra HD Monitor',
+          price: 499,
+          description: 'Experience stunning visuals with this 4K Ultra HD monitor.',
+          image: 'photo-1586952522435-6119039e221e',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '6',
+          name: 'Portable Bluetooth Speaker',
+          price: 79,
+          description: 'Enjoy your music anywhere with this portable Bluetooth speaker.',
+          image: 'photo-1542393458-709364ed512b',
+          createdAt: new Date().toISOString(),
+        },
       ];
-      setProducts(initialProducts);
-      localStorage.setItem('products', JSON.stringify(initialProducts));
+      setProducts(mockProducts);
+      localStorage.setItem('products', JSON.stringify(mockProducts));
     }
 
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
+    // Load cart from local storage
+    const storedCart = localStorage.getItem('cart');
+    if (storedCart) {
+      setCart(JSON.parse(storedCart));
+    }
+
+    // Check if user is admin (for demonstration purposes)
+    const storedIsAdmin = localStorage.getItem('isAdmin');
+    if (storedIsAdmin) {
+      setIsAdmin(JSON.parse(storedIsAdmin));
     }
   }, []);
 
-  const handleAuth = (email: string, password: string, name?: string) => {
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    if (authMode === 'signin') {
-      // Check if user already exists
-      if (users.find(u => u.email === email)) {
-        toast({
-          title: "Error",
-          description: "User already exists. Please log in instead.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const newUser: User = {
-        id: Date.now().toString(),
-        email,
-        password,
-        name: name || email.split('@')[0],
-        createdAt: new Date().toISOString()
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
-      setCurrentUser(newUser);
+  useEffect(() => {
+    document.body.classList.toggle('dark', localStorage.theme === 'dark');
+  }, []);
+
+  const addToCart = (productId: string) => {
+    const existingCartItem = cart.find(item => item.productId === productId);
+    if (existingCartItem) {
+      const updatedCart = cart.map(item =>
+        item.productId === productId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+      setCart(updatedCart);
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+    } else {
+      const updatedCart = [...cart, { productId, quantity: 1 }];
+      setCart(updatedCart);
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+    }
+    toast({
+      title: "Item added to cart!",
+      description: "Check your cart to proceed to checkout.",
+    })
+  };
+
+  const updateCart = (updatedCart: CartItem[]) => {
+    setCart(updatedCart);
+  };
+
+  const removeFromCart = (productId: string) => {
+    const updatedCart = cart.filter(item => item.productId !== productId);
+    setCart(updatedCart);
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem('cart');
+  };
+
+  const createProduct = () => {
+    const newProductId = Math.random().toString(36).substring(2, 15);
+    const productToAdd: Product = {
+      id: newProductId,
+      ...newProduct,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedProducts = [...products, productToAdd];
+    setProducts(updatedProducts);
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+    setNewProduct({
+      name: '',
+      price: 0,
+      description: '',
+      image: '',
+    });
+    setShowAdminPanel(false);
+    toast({
+      title: "Product Created!",
+      description: "The product has been successfully created.",
+    })
+  };
+
+  const deleteProduct = (productId: string) => {
+    const updatedProducts = products.filter(product => product.id !== productId);
+    setProducts(updatedProducts);
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+    toast({
+      title: "Product Deleted!",
+      description: "The product has been successfully deleted.",
+    })
+  };
+
+  const handleCheckout = () => {
+    // Implement checkout logic here
+    clearCart();
+    setShowCheckout(false);
+    toast({
+      title: "Thank you for your order!",
+      description: "Your order has been placed successfully.",
+    })
+  };
+
+  const toggleAdminPanel = () => {
+    setShowAdminPanel(!showAdminPanel);
+  };
+
+  const toggleAuthModal = (type: 'login' | 'register') => {
+    setAuthType(type);
+    setShowAuthModal(!showAuthModal);
+  };
+
+  const handleAuth = (success: boolean) => {
+    if (success) {
+      setIsAdmin(true);
+      localStorage.setItem('isAdmin', JSON.stringify(true));
       setShowAuthModal(false);
       toast({
-        title: "Welcome! 🎉",
-        description: "Thanks for creating an account!"
-      });
+        title: "Login Successful!",
+        description: "You are now logged in as an administrator.",
+      })
     } else {
-      // Login - Check for admin first
-      if (email === 'admin@gmail.com' && password === 'PASSWORD') {
-        const adminUser: User = {
-          id: 'admin',
-          email: 'admin@gmail.com',
-          password: 'PASSWORD',
-          name: 'Admin',
-          createdAt: new Date().toISOString()
-        };
-        
-        localStorage.setItem('currentUser', JSON.stringify(adminUser));
-        setCurrentUser(adminUser);
-        setShowAuthModal(false);
-        setShowAdminPanel(true);
-        
-        toast({
-          title: "Welcome back Admin! 👑",
-          description: "Successfully logged in!"
-        });
-        return;
-      }
-      
-      // Check regular users
-      const user = users.find(u => u.email === email && u.password === password);
-      if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        setCurrentUser(user);
-        setShowAuthModal(false);
-        
-        toast({
-          title: "Welcome back! 🚀",
-          description: "Successfully logged in!"
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Invalid email or password",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Login Failed!",
+        description: "Please check your credentials and try again.",
+      })
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    setCurrentUser(null);
-    setShowAdminPanel(false);
+    setIsAdmin(false);
+    localStorage.removeItem('isAdmin');
     toast({
-      title: "Logged out",
-      description: "Successfully logged out!"
-    });
+      title: "Logout Successful!",
+      description: "You have been successfully logged out.",
+    })
   };
 
-  const addToCart = (productId: string) => {
-    if (!currentUser) {
-      toast({
-        title: "Please log in",
-        description: "You need to log in to add items to cart",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const existingItem = cart.find(item => item.productId === productId);
-    let newCart;
-    
-    if (existingItem) {
-      newCart = cart.map(item => 
-        item.productId === productId 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-    } else {
-      newCart = [...cart, { productId, quantity: 1 }];
-    }
-    
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
-    toast({
-      title: "Added to cart",
-      description: "Item added successfully!"
-    });
-  };
-
-  const handleCheckout = () => {
-    if (cart.length === 0) return;
-    setShowCart(false);
-    setShowCheckout(true);
-  };
-
-  const handleOrderComplete = (orderData: any) => {
-    const orders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
-
-    const newOrder: Order = {
-      id: Date.now().toString(),
-      userId: currentUser!.id,
-      items: [...cart],
-      total: orderData.total,
-      createdAt: new Date().toISOString(),
-      status: 'completed',
-      customerInfo: {
-        name: orderData.name,
-        email: orderData.email,
-        phone: orderData.phone,
-        address: orderData.address,
-        city: orderData.city,
-        zipCode: orderData.zipCode
-      },
-      products: orderData.products
-    };
-
-    orders.push(newOrder);
-    localStorage.setItem('orders', JSON.stringify(orders));
-    setCart([]);
-    localStorage.setItem('cart', JSON.stringify([]));
-    setShowCheckout(false);
-    
-    toast({
-      title: "Order placed successfully! 🎉",
-      description: `Thank you for your order of $${orderData.total.toFixed(2)}. We'll process it soon!`
-    });
-  };
-
-  if (showAdminPanel && currentUser?.email === 'admin@gmail.com') {
+  // Show product detail if we're on a product page
+  if (productId) {
     return (
-      <ThemeProvider>
-        <AdminPanel 
-          onClose={() => setShowAdminPanel(false)}
-          products={products}
-          setProducts={setProducts}
-        />
-      </ThemeProvider>
+      <ProductDetail
+        products={products}
+        cart={cart}
+        onAddToCart={addToCart}
+        onBuyNow={(id) => {
+          addToCart(id);
+          setShowCheckout(true);
+        }}
+      />
     );
   }
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-500">
-        {/* Enhanced Header with Glass Effect */}
-        <header className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 shadow-lg transition-all duration-300">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-20">
-              <div className="flex items-center space-x-4">
-                <div className="relative group">
-                  <Package className="h-10 w-10 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110 duration-300" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
-                </div>
-                <div>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">TechStore</span>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Premium Tech Experience</div>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <ThemeToggle />
-                
-                {currentUser ? (
-                  <>
-                    <div className="hidden sm:block">
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        Welcome, <span className="font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{currentUser.name}</span>
-                      </span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowCart(true)}
-                      className="relative hover:scale-110 transition-all duration-300 group"
-                    >
-                      <ShoppingCart className="h-4 w-4 group-hover:animate-bounce" />
-                      {cart.length > 0 && (
-                        <Badge className="absolute -top-3 -right-3 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs bg-gradient-to-r from-red-500 to-pink-500 animate-pulse shadow-lg">
-                          {cart.length}
-                        </Badge>
-                      )}
-                    </Button>
-                    {currentUser.email === 'admin@gmail.com' && (
-                      <Button onClick={() => setShowAdminPanel(true)} variant="outline" size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 hover:scale-110 transition-all duration-300 shadow-lg">
-                        <Shield className="h-4 w-4 mr-2" />
-                        Admin Panel
-                      </Button>
-                    )}
-                    <Button onClick={handleLogout} variant="outline" size="sm" className="hover:scale-105 transition-all duration-300">
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button 
-                      onClick={() => { setAuthMode('signin'); setShowAuthModal(true); }}
-                      variant="outline"
-                      className="hover:scale-110 transition-all duration-300 border-2 hover:border-blue-500"
-                    >
-                      Sign Up
-                    </Button>
-                    <Button 
-                      onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl"
-                    >
-                      Log In
-                    </Button>
-                  </>
-                )}
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-slate-900 transition-colors duration-300">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <a href="/" className="flex items-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                TechStore
+              </a>
             </div>
-          </div>
-        </header>
 
-        {/* Hero Section with Advanced Parallax */}
-        <section className="relative py-32 px-4 overflow-hidden">
-          {/* Advanced Background Effects */}
-          <div className="absolute inset-0 opacity-20 dark:opacity-10">
-            <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
-            <div className="absolute top-40 right-10 w-96 h-96 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-1000"></div>
-            <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-gradient-to-r from-green-500 to-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-2000"></div>
-          </div>
-          
-          {/* Floating Elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-blue-400 rounded-full animate-ping delay-1000"></div>
-            <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-purple-400 rounded-full animate-ping delay-2000"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-2 h-2 bg-pink-400 rounded-full animate-ping delay-3000"></div>
-          </div>
-          
-          <div className="relative max-w-7xl mx-auto text-center">
-            <div className="animate-fade-in">
-              <Badge className="mb-8 px-6 py-3 text-lg bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 border-0 shadow-lg hover:scale-105 transition-transform duration-300">
-                <Sparkles className="w-5 h-5 mr-2" />
-                New Collection Available
-              </Badge>
-              
-              <h1 className="text-7xl md:text-8xl font-bold mb-8 leading-tight">
-                Welcome to{' '}
-                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-pulse">
-                  TechStore
-                </span>
-              </h1>
-              <p className="text-2xl md:text-3xl text-gray-600 dark:text-gray-300 mb-12 max-w-5xl mx-auto leading-relaxed">
-                Discover the future of technology with our premium collection. 
-                From cutting-edge devices to innovative accessories — your tech journey starts here.
-              </p>
-              
-              <div className="flex flex-wrap justify-center gap-6 mb-20">
-                <Badge variant="secondary" className="px-6 py-3 text-lg bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 hover:scale-105 transition-transform duration-300">
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Premium Quality
-                </Badge>
-                <Badge variant="secondary" className="px-6 py-3 text-lg bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 hover:scale-105 transition-transform duration-300">
-                  <Zap className="w-5 h-5 mr-2" />
-                  Lightning Fast Delivery
-                </Badge>
-                <Badge variant="secondary" className="px-6 py-3 text-lg bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 hover:scale-105 transition-transform duration-300">
-                  <Shield className="w-5 h-5 mr-2" />
-                  Secure & Trusted
-                </Badge>
-              </div>
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-6">
+              <a href="#products" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                Products
+              </a>
+              <a href="#testimonials" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                Testimonials
+              </a>
+              <a href="#contact" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300">
+                Contact
+              </a>
+            </div>
 
-              <Button className="text-xl px-12 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 group">
-                Explore Collection
-                <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform duration-300" />
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button variant="ghost">
+                <Menu className="h-6 w-6" />
               </Button>
             </div>
 
-            {/* Stats Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24">
-              {[
-                { number: "50K+", label: "Happy Customers", icon: Users, gradient: "from-blue-500 to-cyan-500" },
-                { number: "99.9%", label: "Uptime Guarantee", icon: CheckCircle, gradient: "from-green-500 to-blue-500" },
-                { number: "24/7", label: "Expert Support", icon: Headphones, gradient: "from-purple-500 to-pink-500" }
-              ].map((stat, index) => (
-                <Card key={index} className="group hover:scale-105 transition-all duration-500 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl">
-                  <CardContent className="p-8 text-center">
-                    <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r ${stat.gradient} p-5 group-hover:rotate-12 transition-transform duration-500`}>
-                      <stat.icon className="h-10 w-10 text-white" />
-                    </div>
-                    <h3 className="text-4xl font-bold mb-2 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">{stat.number}</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg">{stat.label}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            {/* Actions */}
+            <div className="flex items-center space-x-4">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                onClick={() => setShowCart(true)}
+                className="relative"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <Badge className="absolute -top-2 -right-2 rounded-full px-1.5 py-0 text-xs font-medium ring-2 ring-white dark:ring-gray-900">
+                  {cart.length}
+                </Badge>
+                <span className="sr-only">View Cart</span>
+              </Button>
+              {isAdmin ? (
+                <>
+                  <Button onClick={toggleAdminPanel} variant="secondary">
+                    Admin Panel
+                  </Button>
+                  <Button onClick={handleLogout} variant="destructive">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => toggleAuthModal('login')} variant="secondary">
+                  Admin Login
+                </Button>
+              )}
             </div>
           </div>
-        </section>
+        </div>
+      </nav>
 
-        {/* Features Section */}
-        <section className="py-24 bg-gradient-to-br from-slate-100 to-white dark:from-slate-800 dark:to-slate-900">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                Why Choose TechStore?
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                Experience the difference with our premium features and unmatched service quality
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1507883245204-4b1c29d0c70b?w=1920&q=75"
+            alt="Hero Background"
+            className="w-full h-full object-cover animate- Kenburns"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-500/30 dark:from-blue-900/60 dark:to-purple-900/60" />
+        </div>
+        <div className="container relative z-10 text-center">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-6">
+            Welcome to TechStore
+          </h1>
+          <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-12">
+            Your one-stop shop for the latest tech gadgets and accessories.
+          </p>
+          <div className="flex items-center justify-center space-x-4">
+            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              Explore Products
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button variant="outline" size="lg">
+              Learn More
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="inline-flex items-center justify-center p-6 bg-blue-100 dark:bg-blue-900 rounded-full text-blue-600 dark:text-blue-300 mb-4">
+                <Award className="h-8 w-8" />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                10+ Years
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Experience in the industry
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { icon: Users, title: "Trusted Community", desc: "Join thousands of satisfied customers worldwide", gradient: "from-blue-500 to-cyan-500" },
-                { icon: Package, title: "Premium Products", desc: "Carefully curated high-quality tech products", gradient: "from-purple-500 to-pink-500" },
-                { icon: TrendingUp, title: "Fast Delivery", desc: "Lightning-fast shipping to your doorstep", gradient: "from-green-500 to-blue-500" },
-                { icon: Award, title: "Award Winning", desc: "Recognized for excellence in customer service", gradient: "from-yellow-500 to-orange-500" }
-              ].map((feature, index) => (
-                <Card key={index} className="group hover:scale-110 transition-all duration-500 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl cursor-pointer">
-                  <CardContent className="p-8 text-center">
-                    <div className={`w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r ${feature.gradient} p-4 group-hover:rotate-12 transition-all duration-500 group-hover:scale-110`}>
-                      <feature.icon className="h-8 w-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{feature.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{feature.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <div>
+              <div className="inline-flex items-center justify-center p-6 bg-green-100 dark:bg-green-900 rounded-full text-green-600 dark:text-green-300 mb-4">
+                <Users className="h-8 w-8" />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                500K+
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Happy customers worldwide
+              </p>
+            </div>
+            <div>
+              <div className="inline-flex items-center justify-center p-6 bg-purple-100 dark:bg-purple-900 rounded-full text-purple-600 dark:text-purple-300 mb-4">
+                <Zap className="h-8 w-8" />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                99.9%
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Uptime guarantee
+              </p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Products Section */}
-        <section className="py-24 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-16">
-              <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 border-0">
-                <Star className="w-4 h-4 mr-2" />
-                Featured Collection
-              </Badge>
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                Premium Products
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                Handpicked items designed to elevate your tech experience
+      {/* Features Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-screen h-1/2 bg-gradient-to-r from-blue-100 to-transparent dark:from-blue-900/30" />
+          <div className="absolute right-0 bottom-1/2 transform translate-y-1/2 w-screen h-1/2 bg-gradient-to-l from-purple-100 to-transparent dark:from-purple-900/30" />
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              Why Choose TechStore?
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              We offer a wide selection of high-quality products, competitive prices, and exceptional customer service.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+              <div className="inline-flex items-center justify-center p-4 bg-blue-100 dark:bg-blue-900 rounded-full text-blue-600 dark:text-blue-300 mb-4">
+                <Truck className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Fast & Free Shipping
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Get your products delivered quickly and for free on orders over $50.
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {products.map((product, index) => (
-                <Card key={product.id} className="group overflow-hidden hover:shadow-3xl transition-all duration-500 bg-white dark:bg-slate-800 border-0 shadow-xl hover:scale-105 cursor-pointer">
-                  <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 overflow-hidden relative">
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <Badge className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-blue-500 text-white border-0 animate-pulse">
-                      New
-                    </Badge>
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+              <div className="inline-flex items-center justify-center p-4 bg-green-100 dark:bg-green-900 rounded-full text-green-600 dark:text-green-300 mb-4">
+                <Shield className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Secure Payments
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                We use the latest encryption technology to ensure your payments are safe and secure.
+              </p>
+            </div>
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+              <div className="inline-flex items-center justify-center p-4 bg-orange-100 dark:bg-orange-900 rounded-full text-orange-600 dark:text-orange-300 mb-4">
+                <MessageCircle className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                24/7 Customer Support
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Our dedicated support team is available around the clock to assist you with any questions or concerns.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section id="products" className="py-20 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              Featured Products
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Discover our curated collection of premium products designed for modern living
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {products.map((product, index) => (
+              <Card 
+                key={product.id} 
+                className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg overflow-hidden cursor-pointer"
+                onClick={() => navigate(`/product/${product.id}`)}
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animation: 'fade-in 0.6s ease-out forwards'
+                }}
+              >
+                <div className="relative overflow-hidden">
+                  <img 
+                    src={`https://images.unsplash.com/${product.image}?w=400&h=300&fit=crop&crop=center`}
+                    alt={product.name}
+                    className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                    <Button size="sm" className="bg-white/90 text-gray-900 hover:bg-white shadow-lg">
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex justify-between items-start group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      <span className="text-xl">{product.name}</span>
-                      <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <Badge className="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0">
+                    New
+                  </Badge>
+                </div>
+                
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                    {product.name}
+                  </CardTitle>
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                    <span className="text-sm text-gray-500 ml-2">(4.8)</span>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0">
+                  <CardDescription className="text-sm mb-4 line-clamp-2">
+                    {product.description}
+                  </CardDescription>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         ${product.price}
                       </span>
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
-                      {product.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400 hover:scale-125 transition-transform cursor-pointer" />
-                        ))}
-                        <span className="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">(4.9)</span>
-                      </div>
-                      <Button 
-                        onClick={() => addToCart(product.id)} 
-                        size="sm"
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl px-6"
-                      >
-                        Add to Cart
-                      </Button>
+                      <span className="text-sm text-gray-400 line-through">
+                        ${(product.price * 1.2).toFixed(2)}
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <Badge variant="destructive" className="text-xs">
+                      17% OFF
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product.id);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-lg"
+                      size="sm"
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-1" />
+                      Add to Cart
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Testimonials Section */}
-        <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-900 dark:to-slate-800">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                What Our Customers Say
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400">Real reviews from our amazing community</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { name: "Sarah Johnson", role: "Tech Enthusiast", review: "Absolutely amazing quality and service! TechStore has become my go-to for all tech needs.", rating: 5 },
-                { name: "Mike Chen", role: "Developer", review: "Fast delivery and premium products. The customer support is outstanding!", rating: 5 },
-                { name: "Emily Davis", role: "Designer", review: "Love the user experience and product quality. Highly recommend TechStore!", rating: 5 }
-              ].map((testimonial, index) => (
-                <Card key={index} className="group hover:scale-105 transition-all duration-500 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl">
-                  <CardContent className="p-8">
-                    <Quote className="h-8 w-8 text-blue-500 mb-4 opacity-50" />
-                    <p className="text-gray-700 dark:text-gray-300 mb-6 text-lg leading-relaxed italic">"{testimonial.review}"</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.role}</p>
-                      </div>
-                      <div className="flex space-x-1">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-20 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              What Our Customers Say
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Read what our satisfied customers have to say about their experience with TechStore.
+            </p>
           </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-24 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative max-w-7xl mx-auto px-4 text-center text-white">
-            <h2 className="text-6xl font-bold mb-6">Ready to Get Started?</h2>
-            <p className="text-2xl mb-10 opacity-90">Join thousands of satisfied customers today</p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 hover:scale-110 transition-all duration-300 px-12 py-6 text-xl font-semibold shadow-2xl">
-                Shop Now
-                <ArrowRight className="ml-3 h-6 w-6" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 hover:scale-110 transition-all duration-300 px-12 py-6 text-xl font-semibold">
-                Learn More
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Enhanced Footer */}
-        <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-16">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-              <div className="col-span-1 md:col-span-2">
-                <div className="flex items-center space-x-3 mb-6">
-                  <Package className="h-8 w-8 text-blue-400" />
-                  <span className="text-2xl font-bold">TechStore</span>
-                </div>
-                <p className="text-gray-400 text-lg leading-relaxed mb-6">
-                  Your trusted partner for premium technology products. 
-                  We deliver excellence in every purchase.
-                </p>
-                <div className="flex space-x-4">
-                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 transition-transform cursor-pointer">
-                    <Globe className="w-4 h-4 mr-2" />
-                    Worldwide Shipping
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-green-500 to-blue-500 hover:scale-105 transition-transform cursor-pointer">
-                    <Shield className="w-4 h-4 mr-2" />
-                    Secure Payment
-                  </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b2933e?w=50&h=50&fit=crop&crop=faces"
+                  alt="Customer 1"
+                  className="w-10 h-10 rounded-full mr-4"
+                />
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Sarah Johnson
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    New York, NY
+                  </p>
                 </div>
               </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold mb-6">Quick Links</h3>
-                <ul className="space-y-3">
-                  {['About Us', 'Products', 'Support', 'Contact'].map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-2 transform inline-block">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold mb-6">Support</h3>
-                <ul className="space-y-3">
-                  {['Help Center', 'Returns', 'Warranty', 'FAQ'].map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-2 transform inline-block">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <p className="text-gray-700 dark:text-gray-300">
+                "I love shopping at TechStore! They have a great selection of products and the customer service is excellent."
+              </p>
             </div>
-            
-            <div className="border-t border-gray-700 pt-8 text-center">
-              <p className="text-gray-400 text-lg">© 2024 TechStore. All rights reserved.</p>
-              <p className="text-gray-500 mt-2">Delivering premium technology worldwide with excellence</p>
+            <div className="p-6 bg-white dark:bg-gray-700 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&h=50&fit=crop&crop=faces"
+                  alt="Customer 2"
+                  className="w-10 h-10 rounded-full mr-4"
+                />
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Michael Davis
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Los Angeles, CA
+                  </p>
+                </div>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300">
+                "TechStore is my go-to for all things tech. The prices are competitive and the shipping is always fast."
+              </p>
             </div>
           </div>
-        </footer>
+        </div>
+      </section>
 
-        {/* Modals */}
-        {showAuthModal && (
-          <AuthModal
-            mode={authMode}
-            onClose={() => setShowAuthModal(false)}
-            onAuth={handleAuth}
-          />
-        )}
+      {/* Call to Action Section */}
+      <section id="contact" className="py-24 bg-gradient-to-r from-blue-500 to-purple-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-white mb-8">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl text-white opacity-80 max-w-3xl mx-auto mb-12">
+            Explore our wide range of tech products and find the perfect gadgets for your needs.
+          </p>
+          <div className="flex items-center justify-center space-x-4">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 hover:scale-105 transition-all duration-300">
+              View Products
+            </Button>
+            <Button variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-blue-600">
+              Contact Us
+            </Button>
+          </div>
+        </div>
+      </section>
 
-        {showCart && (
-          <Cart
-            cart={cart}
-            products={products}
-            onClose={() => setShowCart(false)}
-            onCheckout={handleCheckout}
-            onUpdateCart={setCart}
-          />
-        )}
+      {/* Footer */}
+      <footer className="py-12 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-600 dark:text-gray-300">
+            &copy; {new Date().getFullYear()} TechStore. All rights reserved.
+          </p>
+        </div>
+      </footer>
 
-        {showCheckout && (
-          <CheckoutForm
-            cart={cart}
-            products={products}
-            currentUser={currentUser}
-            onClose={() => setShowCheckout(false)}
-            onOrderComplete={handleOrderComplete}
-          />
-        )}
-      </div>
-    </ThemeProvider>
+      {/* Cart Modal */}
+      {showCart && (
+        <Cart
+          cart={cart}
+          products={products}
+          onClose={() => setShowCart(false)}
+          onCheckout={() => {
+            setShowCart(false);
+            setShowCheckout(true);
+          }}
+          onUpdateCart={updateCart}
+        />
+      )}
+
+      {/* Checkout Modal */}
+      {showCheckout && (
+        <CheckoutForm
+          cart={cart}
+          products={products}
+          onClose={() => setShowCheckout(false)}
+          onCheckout={handleCheckout}
+        />
+      )}
+
+      {/* Admin Panel Modal */}
+      {showAdminPanel && (
+        <AdminPanel
+          products={products}
+          newProduct={newProduct}
+          setNewProduct={(value) => setNewProduct(value)}
+          onCreateProduct={createProduct}
+          onDeleteProduct={deleteProduct}
+          onClose={toggleAdminPanel}
+        />
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal
+          type={authType}
+          onClose={() => setShowAuthModal(false)}
+          onAuth={handleAuth}
+        />
+      )}
+    </div>
   );
 };
 
