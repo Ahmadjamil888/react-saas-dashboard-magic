@@ -130,16 +130,34 @@ const Index = () => {
         description: "Thanks for creating an account!"
       });
     } else {
-      // Login
+      // Login - Check for admin first
+      if (email === 'admin@gmail.com' && password === 'PASSWORD') {
+        const adminUser: User = {
+          id: 'admin',
+          email: 'admin@gmail.com',
+          password: 'PASSWORD',
+          name: 'Admin',
+          createdAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(adminUser));
+        setCurrentUser(adminUser);
+        setShowAuthModal(false);
+        setShowAdminPanel(true);
+        
+        toast({
+          title: "Welcome back Admin!",
+          description: "Successfully logged in!"
+        });
+        return;
+      }
+      
+      // Check regular users
       const user = users.find(u => u.email === email && u.password === password);
       if (user) {
         localStorage.setItem('currentUser', JSON.stringify(user));
         setCurrentUser(user);
         setShowAuthModal(false);
-        
-        if (email === 'admin@gmail.com' && password === 'PASSWORD') {
-          setShowAdminPanel(true);
-        }
         
         toast({
           title: "Welcome back!",
