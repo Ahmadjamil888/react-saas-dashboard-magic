@@ -1,5 +1,5 @@
 
-# Welcome to Full Stack eCommerce Application
+# Welcome to My Full Stack eCommerce Application
 
 ## Project Info
 
